@@ -1,14 +1,14 @@
-import ru.smak.chat.Client
+import ru.smak.chat.net.Client
+import ru.smak.chat.ui.ConsoleUi
 
 fun main() {
-    val c = Client().apply {
+    val cui = ConsoleUi().apply {
         start()
-        Thread.sleep(5000)
-        send("Данные 1")
-        Thread.sleep(5000)
-        send("Данные 2")
-        Thread.sleep(5000)
-        send("Данные 3")
     }
-    readln()
+    Client().apply {
+        cui.addStopListener { stop() }
+        cui.addDataReadyListener { send(it) }
+        addServerDataReceivedListener { cui.showInfo(it) }
+        start()
+    }
 }

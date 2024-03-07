@@ -1,14 +1,13 @@
-package ru.smak.chat
+package ru.smak.chat.net
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.net.Socket
-import java.net.SocketException
 import kotlin.concurrent.thread
 
 class Client(val host: String = "localhost", val port: Int = 5106) {
-
+    private val serverDataReceivedListener = mutableListOf<(String)->Unit>()
     private var socket: Socket? = null
     private var stop = false
 
@@ -19,7 +18,7 @@ class Client(val host: String = "localhost", val port: Int = 5106) {
                 socket = Socket(host, port)
                 startCommunicating()
             } catch (_: Throwable) {
-                println("Ошибка :(")
+                println("До свидания!")
             } finally {
                 socket?.close()
             }
@@ -29,7 +28,9 @@ class Client(val host: String = "localhost", val port: Int = 5106) {
     private fun startCommunicating() {
         while (!stop && socket != null) {
             val data = readData()
-            process(data)
+            serverDataReceivedListener.forEach {
+                it(data)
+            }
         }
     }
 
@@ -39,17 +40,17 @@ class Client(val host: String = "localhost", val port: Int = 5106) {
         } ?: ""
     }
 
-    private fun process(data: String){
-        println(data)
-    }
+
 
     fun send(data: String){
-        socket?.let{
-            PrintWriter(it.getOutputStream()).apply {
-                println(data)
-                flush()
+        try {
+            socket?.let {
+                PrintWriter(it.getOutputStream()).apply {
+                    println(data)
+                    flush()
+                }
             }
-        }
+        } catch(_: Throwable){}
     }
 
     fun stop(){
@@ -57,4 +58,11 @@ class Client(val host: String = "localhost", val port: Int = 5106) {
         socket?.close()
     }
 
+    fun addServerDataReceivedListener(l:(String)->Unit){
+        serverDataReceivedListener.add(l)
+    }
+
+    fun removeServerDataReceivedListener(l:(String)->Unit){
+        serverDataReceivedListener.remove(l)
+    }
 }
