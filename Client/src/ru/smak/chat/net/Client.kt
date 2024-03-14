@@ -40,8 +40,6 @@ class Client(val host: String = "localhost", val port: Int = 5106) {
         } ?: ""
     }
 
-
-
     fun send(data: String){
         try {
             socket?.let {
